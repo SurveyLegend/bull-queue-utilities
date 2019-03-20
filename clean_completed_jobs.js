@@ -45,31 +45,31 @@ if (process.env.SLACK_WEBHOOK_URL && process.env.SLACK_CHANNEL) {
 }
 
 const startTime = Date.now()
-console.log(`${new Date(startTime).toISOString()} - Start cleaning completed jobs in ${args.split(' ').join(', ')} queues`)
+console.log(`${new Date(startTime).toISOString()} - Start cleaning completed jobs in ${args.join(', ')} queues`)
 
 forEach(args, async (name) => {
-    console.log(`${Date().now() - startTime} ms - Start cleaning completed jobs in ${name} queue`)
+    console.log(`${Date.now() - startTime} ms - Start cleaning completed jobs in ${name} queue`)
 
     const queue = new Queue(name, REDIS_CONFIG)
 
     queue.on('cleaned', async (job, type) => {
         const text = `Cleaned ${job.length} ${type} jobs in ${name}.`
-        console.log(`${Date().now() - startTime} ms - ${text}`)
+        console.log(`${Date.now() - startTime} ms - ${text}`)
         await sendToSlack({ text })
         await queue.close()
     })
 
     await queue.clean(JOB_AGE)
 
-    console.log(`${Date().now() - startTime} ms - Finished cleaning completed jobs in ${name} queue`)
+    console.log(`${Date.now() - startTime} ms - Finished cleaning completed jobs in ${name} queue`)
 })
     .then(() => {
-        console.log(`${Date().now() - startTime} ms - Finished cleaning completed jobs in queues`)
+        console.log(`${Date.now() - startTime} ms - Finished cleaning completed jobs in queues`)
         process.exitCode = 0
     })
     .catch(err => {
         console.error(err)
-        console.log(`${Date().now() - startTime} ms - Finished cleaning completed jobs in queues`)
+        console.log(`${Date.now() - startTime} ms - Finished cleaning completed jobs in queues`)
         process.exitCode = 2
     })
 
