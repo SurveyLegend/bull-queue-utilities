@@ -28,40 +28,44 @@ if (args.length < 1) {
     process.exit(1)
 }
 
-let devOps = async () => true
+let sendToSlack = async () => true
 if (process.env.SLACK_WEBHOOK_URL && process.env.SLACK_CHANNEL) {
-    const slack = require('slack-notify')(process.env.SLACK_WEBHOOK_URL)
-    devOps = slack.extend({
+    const Slack = require('slack-notify')(process.env.SLACK_WEBHOOK_URL)
+    const slack = Slack.extend({
         channel: process.env.SLACK_CHANNEL,
         icon_emoji: ':computer:',
         username: 'Bull Queue Bot'
     })
+
+    sendToSlack = options => {
+        return new Promise((resolve, reject) => {
+            slack(options, resolve)
+        })
+    }
 }
 
-forEach(args, async (name, index) => {
-    console.log(`${index}: Start cleaning completed jobs in ${name} queue`)
+forEach(args, async (name) => {
+    console.log(`Start cleaning completed jobs in ${name} queue`)
 
     const queue = new Queue(name, REDIS_CONFIG)
 
     queue.on('cleaned', async (job, type) => {
-        console.log('Cleaned %s %s jobs', job.length, type)
         const text = `Cleaned ${job.length} ${type} jobs in ${name}.`
         console.log(text)
-        await devOps({ text })
+        await sendToSlack({ text })
+        await queue.close()
     })
 
     await queue.clean(JOB_AGE)
 
-    console.log(`${index}: Finished cleaning completed jobs in ${name} queue`)
-
-    return queue.close()
+    console.log(`Finished cleaning completed jobs in ${name} queue`)
 })
     .then(() => {
         console.log('Finished cleaning completed jobs in queues')
-        process.exit()
+        process.exitCode = 0
     })
     .catch(err => {
         console.error(err)
-        process.exit(2)
+        process.exitCode = 2
     })
 

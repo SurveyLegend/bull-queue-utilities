@@ -26,14 +26,20 @@ if (args.length < 1) {
     process.exit(1)
 }
 
-let devOps = async () => true
+let sendToSlack = async () => true
 if (process.env.SLACK_WEBHOOK_URL && process.env.SLACK_CHANNEL) {
-    const slack = require('slack-notify')(process.env.SLACK_WEBHOOK_URL)
-    devOps = slack.extend({
+    const Slack = require('slack-notify')(process.env.SLACK_WEBHOOK_URL)
+    const slack = Slack.extend({
         channel: process.env.SLACK_CHANNEL,
         icon_emoji: ':computer:',
         username: 'Bull Queue Bot'
     })
+
+    sendToSlack = options => {
+        return new Promise((resolve, reject) => {
+            slack(options, resolve)
+        })
+    }
 }
 
 forEach(args, async (name, index) => {
@@ -45,15 +51,7 @@ forEach(args, async (name, index) => {
     if (failedCount > 0) {
         let text = `Found ${failedCount} failed jobs in ${name} queue.`
         console.log(text)
-        await devOps({
-            text
-            /*
-            fields: {
-                'CPU usage': '7.51%',
-                'Memory usage': '254mb'
-            }
-            */
-        })
+        // await sendToSlack({ text })
 
         const jobs = await queue.getFailed()
         const retriedJobCount = await reduce(jobs, async (count, job) => {
@@ -68,21 +66,19 @@ forEach(args, async (name, index) => {
 
         text = `Retrying ${retriedJobCount} of ${failedCount} failed jobs in ${name} queue`
         console.log(text)
-        await devOps({
-            text
-        })
+        await sendToSlack({ text })
     }
 
     console.log(`Finished retrying failed jobs in ${name} queue`)
 
-    return await queue.close()
+    await queue.close()
 })
     .then(() => {
         console.log('Finished retrying failed jobs in queues')
-        process.exit()
+        process.exitCode = 0
     })
     .catch(err => {
         console.error(err)
-        process.exit(2)
+        process.exitCode = 1
     })
 
