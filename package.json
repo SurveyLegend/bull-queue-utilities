@@ -1,37 +1,37 @@
 {
-	"name": "@surveylegend/bull-queue-utilities",
-    "description": "Scripts and utilities to perform maintenance on bull queues.",
-	"version": "0.0.1",
-	"author": "SurveyLegend AB",
-	"contributors": [
-		"Robert Michalski"
-	],
-	"dependencies": {
-		"dotenv": "^7.0.0",
-		"bull": "^3.7.0",
-        "p-iteration": "^1.1.8",
-        "slack-notify": "^0.1.7"
-	},
-	"devDependencies": {
-		"eslint": "^5.15.3"
-	},
-	"engines": {
-		"node": ">=8"
-	},
-    "keywords": [
-        "bull",
-        "redis",
-        "queue",
-        "utility",
-        "maintenance"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/surveylegend/bull-queue-utilities.git"
-    },
-    "license": "BSD-3-Clause",
-    "bugs": {
-        "url": "https://github.com/surveylegend/bull-queue-utilities/issues"
-    },
-    "homepage": "https://github.com/surveylegend/bull-queue-utilities#readme"
+ "name": "@surveylegend/bull-queue-utilities",
+ "description": "Scripts and utilities to perform maintenance on bull queues.",
+ "version": "0.0.2",
+ "author": "SurveyLegend AB",
+ "contributors": [
+  "Robert Michalski"
+ ],
+ "dependencies": {
+  "dotenv": "^7.0.0",
+  "bull": "^3.7.0",
+  "p-iteration": "^1.1.8",
+  "slack-notify": "^0.1.7"
+ },
+ "devDependencies": {
+  "eslint": "^5.15.3"
+ },
+ "engines": {
+  "node": ">=8"
+ },
+ "keywords": [
+  "bull",
+  "redis",
+  "queue",
+  "utility",
+  "maintenance"
+ ],
+ "repository": {
+  "type": "git",
+  "url": "git+https://github.com/surveylegend/bull-queue-utilities.git"
+ },
+ "license": "BSD-3-Clause",
+ "bugs": {
+  "url": "https://github.com/surveylegend/bull-queue-utilities/issues"
+ },
+ "homepage": "https://github.com/surveylegend/bull-queue-utilities#readme"
 }
