@@ -52,10 +52,18 @@ forEach(args, async (name) => {
 
     const queue = new Queue(name, REDIS_CONFIG)
 
-    queue.on('cleaned', async (job, type) => {
-        const text = `Cleaned ${job.length} ${type} jobs in ${name}.`
-        console.log(`${Date.now() - startTime} ms - ${text}`)
-        await sendToSlack({ text })
+    queue.on('cleaned', async (jobs, type) => {
+        // jobs is an array of cleaned jobs
+        const text = `Cleaned ${jobs.length} ${type} jobs in ${name}.`
+        const jobIds = jobs.map(job => job && job === typeof 'object' && job.id ? job.id : job)
+
+        console.log(`${Date.now() - startTime} ms - ${text}`, jobIds)
+        await sendToSlack({
+            text,
+            jobs: jobIds
+            //type // the type of jobs cleaned })
+        })
+
         await queue.close()
     })
 
