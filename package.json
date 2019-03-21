@@ -1,7 +1,7 @@
 {
  "name": "@surveylegend/bull-queue-utilities",
  "description": "Scripts and utilities to perform maintenance on bull queues.",
- "version": "0.0.5",
+ "version": "0.0.6",
  "author": "SurveyLegend AB",
  "contributors": [
   "Robert Michalski"
