@@ -28,21 +28,7 @@ if (args.length < 1) {
     process.exit(1)
 }
 
-let sendToSlack = async () => true
-if (process.env.SLACK_WEBHOOK_URL && process.env.SLACK_CHANNEL) {
-    const Slack = require('slack-notify')(process.env.SLACK_WEBHOOK_URL)
-    const slack = Slack.extend({
-        channel: process.env.SLACK_CHANNEL,
-        icon_emoji: ':computer:',
-        username: 'Bull Queue Bot'
-    })
-
-    sendToSlack = options => {
-        return new Promise((resolve, reject) => {
-            slack(options, resolve)
-        })
-    }
-}
+const sendToSlack = require('./slack')(process.env.SLACK_WEBHOOK_URL, process.env.SLACK_CHANNEL)
 
 const startTime = Date.now()
 console.log(`${new Date(startTime).toISOString()} - Start cleaning completed jobs in ${args.join(', ')} queues`)
