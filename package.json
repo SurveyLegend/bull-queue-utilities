@@ -13,7 +13,7 @@
   "slack-notify": "^0.1.7"
  },
  "devDependencies": {
-  "eslint": "^5.16.0"
+  "eslint": "^6.0.1"
  },
  "engines": {
   "node": ">=8"
