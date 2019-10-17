@@ -7,13 +7,13 @@
   "Robert Michalski"
  ],
  "dependencies": {
-  "dotenv": "^8.0.0",
-  "bull": "^3.10.0",
+  "dotenv": "^8.2.0",
+  "bull": "^3.11.0",
   "p-iteration": "^1.1.8",
   "slack-notify": "^0.1.7"
  },
  "devDependencies": {
-  "eslint": "^6.0.1"
+  "eslint": "^6.5.1"
  },
  "engines": {
   "node": ">=8"
