@@ -12,6 +12,7 @@ const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1'
 const REDIS_DATABASE = Number.parseInt(process.env.REDIS_DATABASE) || 0
 const REDIS_PASS = process.env.REDIS_PASS
 const REDIS_TLS = process.env.REDIS_TLS && `${process.env.REDIS_TLS}` === 'true'
+const MAX_FAILED_COUNT = Number.parseInt(process.env.MAX_FAILED_COUNT) || 100
 
 const REDIS_CONFIG = {
     redis: {
@@ -48,6 +49,9 @@ forEach(args, async (name, index) => {
 
         const jobs = await queue.getFailed()
         const retriedJobCount = await reduce(jobs, async (count, job) => {
+            if (job.attemptsMade > MAX_FAILED_COUNT) {
+                return result
+            }
             try {
                 await job.retry()
                 count++
