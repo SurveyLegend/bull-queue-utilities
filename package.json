@@ -1,7 +1,7 @@
 {
  "name": "@surveylegend/bull-queue-utilities",
  "description": "Scripts and utilities to perform maintenance on bull queues.",
- "version": "0.0.11",
+ "version": "0.0.12",
  "author": "SurveyLegend AB",
  "contributors": [
   "Robert Michalski"
@@ -13,7 +13,6 @@
   "slack-notify": "^0.1.7"
  },
  "devDependencies": {
-
   "eslint": "^7.5.0"
  },
  "engines": {
