@@ -23,6 +23,7 @@
 # Logs and databases #
 ######################
 *.log
+pnpm-lock.yaml
 *.sql
 *.sqlite
 
