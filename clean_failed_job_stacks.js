@@ -50,7 +50,7 @@ forEach(args, async (name, index) => {
         const jobs = await queue.getFailed()
         const retriedJobCount = await reduce(jobs, async (count, job) => {
             if (job.attemptsMade <= job.opts.attempts) {
-                return result
+                return count
             }
             const { id, data, opts } = job
             opts.jobId = id
