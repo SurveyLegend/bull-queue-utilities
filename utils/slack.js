@@ -1,6 +1,4 @@
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value !== ''
-}
+const isNonEmptyString = require('./isNonEmptyString')
 
 function sendToSlack(slack_webhook_url, slack_channel) {
     if (isNonEmptyString(slack_webhook_url) && isNonEmptyString(slack_channel)) {

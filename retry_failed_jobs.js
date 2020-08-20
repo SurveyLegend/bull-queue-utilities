@@ -1,82 +1,64 @@
-const Queue = require('bull')
-const result = require('dotenv').config()
+const queueNames = require('./utils/init')
 
-if (result.error) {
-    throw result.error
-}
+const pMap = require('p-map')
+const sendToSlack = require('./utils/slack')(process.env.SLACK_WEBHOOK_URL, process.env.SLACK_CHANNEL)
 
-const { forEach, reduce } = require('p-iteration')
+const sumArray = require('./utils/sumArray')
+const getFailedQueues = require('./utils/getFailedQueues')
+const getAttemptedJobs = require('./utils/jobsExceedingAttemptsFilter')
 
-const REDIS_PORT = Number.parseInt(process.env.REDIS_PORT) || 6379
-const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1'
-const REDIS_DATABASE = Number.parseInt(process.env.REDIS_DATABASE) || 0
-const REDIS_PASS = process.env.REDIS_PASS
-const REDIS_TLS = process.env.REDIS_TLS && `${process.env.REDIS_TLS}` === 'true'
+console.log(`${new Date().toISOString()} - Checking for failed jobs in ${queueNames.join(', ')} queues`)
+
+const CONCURRENCY = parseInt(process.env.CONCURRENCY) || 50
 const MAX_FAILED_COUNT = Number.parseInt(process.env.MAX_FAILED_COUNT) || 100
 
-const REDIS_CONFIG = {
-    redis: {
-        port: REDIS_PORT,
-        host: REDIS_HOST,
-        db: REDIS_DATABASE,
-        password: REDIS_PASS,
-        tls: REDIS_TLS ? {} : null
-    }
-}
-
-const args = process.argv.slice(2)
-
-if (args.length < 1) {
-    console.error(`${new Date().toISOString()} - No queue name specified, please specify at least one queue name.`)
-    process.exit(1)
-}
-
-const sendToSlack = require('./slack')(process.env.SLACK_WEBHOOK_URL, process.env.SLACK_CHANNEL)
-
 const startTime = Date.now()
-console.log(`${new Date(startTime).toISOString()} - Checking for failed jobs in ${args.join(', ')} queues`)
 
-forEach(args, async (name, index) => {
-    console.log(`${Date.now() - startTime} ms - Start retrying failed jobs in ${name} queue`)
+getFailedQueues(queueNames)
+    .then(async queues => {
+        const retriedJobCountsForEachQueue = await Promise.all(
+            queues.map(async queue => {
+                const failedJobs = getAttemptedJobs(await queue.getFailed())
+                    .filter(job => job.attemptsMade > MAX_FAILED_COUNT)
 
-    const queue = new Queue(name, REDIS_CONFIG)
+                if (!failedJobs.length) {
+                    return queue.close().then(() => 0)
+                }
 
-    const failedCount = await queue.getFailedCount()
-    if (failedCount > 0) {
-        let text = `Found ${failedCount} failed jobs in ${name} queue.`
-        console.log(`${Date.now() - startTime} ms - ${text}`)
-        // await sendToSlack({ text })
+                const failedCount = failedJobs.length
+                const retriedJobs = await pMap(
+                    failedJobs,
+                    async job => {
+                        try {
+                            await job.retry()
+                            return 1
+                        } catch (e) {
+                            console.error(e)
+                            return 0
+                        }
+                    },
+                    { concurrency: CONCURRENCY }
+                )
+                const retriedJobCountInQueue = sumArray(retriedJobs)
+                const text = `Retried ${retriedJobCountInQueue} of ${failedCount} failed jobs in ${queue.name} queue`
+                console.log(`${Date.now() - startTime} ms - ${text}`)
 
-        const jobs = await queue.getFailed()
-        const retriedJobCount = await reduce(jobs, async (count, job) => {
-            if (!job || typeof job !== 'object' || job.attemptsMade > MAX_FAILED_COUNT) {
-                return count
-            }
-            try {
-                await job.retry()
-                count++
-            } catch (e) {
-                console.error(e)
-            }
-            return count
-        }, 0)
+                return Promise.all([
+                    sendToSlack({ text }),
+                    queue.close()
+                ]).then(() => retriedJobCountInQueue)
+            })
+        )
 
-        text = `Retrying ${retriedJobCount} of ${failedCount} failed jobs in ${name} queue`
-        console.log(`${Date.now() - startTime} ms - ${text}`)
-        await sendToSlack({ text })
-    } else {
-        console.log(`${Date.now() - startTime} ms - No jobs failed jobs in ${name} queue`)
-    }
-
-    await queue.close()
-})
-    .then(() => {
-        console.log(`${Date.now() - startTime} ms - Finished retrying failed jobs in queues`)
+        return sumArray(retriedJobCountsForEachQueue)
+    })
+    .then((retriedJobsInAllQueues) => {
+        console.log(`${Date.now() - startTime} ms - Finished retrying ${retriedJobsInAllQueues} failed jobs in ${queueNames.join(', ')} queues`)
         process.exitCode = 0
     })
     .catch(err => {
         console.error(err)
-        console.log(`${Date.now() - startTime} ms - Finished retrying failed jobs in queues`)
+        console.log(`${Date.now() - startTime} ms - Finished retrying failed jobs in ${queueNames.join(', ')} queues`)
         process.exitCode = 1
     })
 
