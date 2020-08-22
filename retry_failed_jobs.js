@@ -19,7 +19,6 @@ getFailedQueues(queueNames)
         const retriedJobCountsForEachQueue = await Promise.all(
             queues.map(async queue => {
                 const failedJobs = getAttemptedJobs(await queue.getFailed())
-                    .filter(job => job.attemptsMade > MAX_FAILED_COUNT)
 
                 if (!failedJobs.length) {
                     return queue.close().then(() => 0)
