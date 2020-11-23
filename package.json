@@ -8,12 +8,12 @@
  ],
  "dependencies": {
   "dotenv": "^8.2.0",
-  "bull": "^3.18.0",
+  "bull": "^3.19.1",
   "p-map": "^4.0.0",
   "slack-notify": "^0.1.7"
  },
  "devDependencies": {
-  "eslint": "^7.7.0"
+  "eslint": "^7.14.0"
  },
  "engines": {
   "node": ">=10"
