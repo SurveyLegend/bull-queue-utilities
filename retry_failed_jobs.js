@@ -10,7 +10,6 @@ const getAttemptedJobs = require('./utils/jobsExceedingAttemptsFilter')
 console.log(`${new Date().toISOString()} - Checking for failed jobs in ${queueNames.join(', ')} queues`)
 
 const CONCURRENCY = parseInt(process.env.CONCURRENCY) || 50
-const MAX_FAILED_COUNT = Number.parseInt(process.env.MAX_FAILED_COUNT) || 100
 
 const startTime = Date.now()
 
