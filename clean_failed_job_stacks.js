@@ -5,7 +5,7 @@ const sendToSlack = require('./utils/slack')(process.env.SLACK_WEBHOOK_URL, proc
 
 const sumArray = require('./utils/sumArray')
 const getFailedQueues = require('./utils/getFailedQueues')
-const getAttemptedJobs = require('./utils/jobsExceedingAttemptsFilter')
+const getJobsBelowAttemptLimit = require('./utils/jobsNotExceedingAttemptsFilter')
 
 console.log(`${new Date().toISOString()} - Checking for failed jobs in ${queueNames.join(', ')} queues`)
 
@@ -17,15 +17,15 @@ getFailedQueues(queueNames)
     .then(async queues => {
         const retriedJobCountsForEachQueue = await Promise.all(
             queues.map(async queue => {
-                const failedJobs = getAttemptedJobs(await queue.getFailed())
+                const failedJobsToRetry = getJobsBelowAttemptLimit(await queue.getFailed())
 
-                if (!failedJobs.length) {
+                if (!failedJobsToRetry.length) {
                     return queue.close().then(() => 0)
                 }
 
-                const failedCount = failedJobs.length
+                const failedCount = failedJobsToRetry.length
                 const retriedJobs = await pMap(
-                    failedJobs,
+                    failedJobsToRetry,
                     async job => {
                         const { id, data, opts } = job
                         opts.jobId = id
